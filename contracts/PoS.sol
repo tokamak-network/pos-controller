@@ -58,7 +58,7 @@ contract PoS is Ownable, TokenController {
 
       uint claimRate = getClaimRate(c[c.length - 1].fromBlock);
 
-      // TODO: remove the num of variables
+      // TODO: reduce variables into few statements
       uint balance = token.balanceOf(_owner);
 
       uint targetBalance = balance.mul(posCoeff.add(claimRate)).div(posCoeff);
