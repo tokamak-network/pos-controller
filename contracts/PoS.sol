@@ -86,9 +86,16 @@ contract PoS is Ownable, TokenController {
 
     uint rate = posRate;
 
-    // CAUTION: `pow` should not be too big
+    /**
+     * if claim rate is 10%,
+     * 1st claim: 10%
+     * 2nd claim: 10% + 11%
+     * 3rd claim: 10% + (10% + 11%) * 110%
+     *
+     * ith claim: posRate + [i-1th claim] * (posCoeff + posRate) / posCoeff
+     */
     for (uint i = 0; i < pow - 1; i++) {
-      rate = posCoeff.add(posRate).mul(rate).div(posCoeff);
+      rate = rate.mul(posCoeff.add(posRate)).div(posCoeff).add(posRate);
     }
 
     return rate;
