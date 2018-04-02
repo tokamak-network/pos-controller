@@ -1,6 +1,3 @@
-# intellij config
-.idea
-
 node_modules
 build
 
