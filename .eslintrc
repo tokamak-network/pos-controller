@@ -35,7 +35,7 @@
 
         "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.js", "**/*.spec.js", "**/compile.js", "**/test/*.js"]}],
 
-        // fuzex
+        // minimi-pos-controller
         "no-await-in-loop": "off",
         "no-restricted-syntax": "off",
         "no-mixed-operators": "off",
@@ -43,7 +43,10 @@
         "one-var": "off",
         "func-names": ["error", "never"],
         "no-underscore-dangle": "off",
-        "no-console": "off"
+        "no-console": "off",
+        "prefer-destructuring": "off",
+        "no-param-reassign": "off",
+        "no-unused-vars": "off",
     },
     "globals": {
         "artifacts": true,

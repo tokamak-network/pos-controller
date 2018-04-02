@@ -1,3 +1,5 @@
+import range from "lodash/range";
+
 import ether from "./helpers/ether";
 import advanceToBlock, { advanceBlock } from "./helpers/advanceToBlock";
 import increaseTime, { increaseTimeTo, duration } from "./helpers/increaseTime";
@@ -7,8 +9,6 @@ import { capture, restore, Snapshot } from "./helpers/snapshot";
 import timer from "./helpers/timer";
 import sendTransaction from "./helpers/sendTransaction";
 import "./helpers/upgradeBigNumber";
-
-import range from "lodash/range";
 
 const moment = require("moment");
 
@@ -134,7 +134,8 @@ contract("PoS", async (accounts) => {
   //
   //     afterBalances.forEach((afterBalance, i) => {
   //         const beforeBalance = beforeBalances[i];
-  //         afterBalance.should.be.bignumber.equal(beforeBalance.mul(currentPosRate.add(posCoeff)).div(posCoeff));
+  //         afterBalance.should.be.bignumber
+  //           .equal(beforeBalance.mul(currentPosRate.add(posCoeff)).div(posCoeff));
   //     });
   // });
 
@@ -154,8 +155,10 @@ contract("PoS", async (accounts) => {
     const account2BalanceAfter = await getTokenBalance(accounts[ 2 ]);
     const account3BalanceAfter = await getTokenBalance(accounts[ 3 ]);
 
-    account0BalanceAfter.should.be.bignumber.equal(account0BalanceBefore.mul((posRate + posCoeff) / posCoeff));
-    account1BalanceAfter.should.be.bignumber.equal(account1BalanceBefore.mul((posRate + posCoeff) / posCoeff));
+    account0BalanceAfter.should.be.bignumber
+      .equal(account0BalanceBefore.mul((posRate + posCoeff) / posCoeff));
+    account1BalanceAfter.should.be.bignumber
+      .equal(account1BalanceBefore.mul((posRate + posCoeff) / posCoeff));
 
     account2BalanceAfter.should.be.bignumber.equal(account2BalanceBefore);
     account3BalanceAfter.should.be.bignumber.equal(account3BalanceBefore);

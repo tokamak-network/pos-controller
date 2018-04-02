@@ -7,7 +7,7 @@ const BigNumber = web3.BigNumber;
  * @param {BigNumber} e epsilon
  * @return {Boolean} result of calculation
  */
-BigNumber.prototype.diff = function diff(n, r, e = new BigNumber(1e-10)) {
+BigNumber.prototype.diff = function (n, r, e = new BigNumber(1e-10)) {
   n = new BigNumber(n);
   r = new BigNumber(r);
   e = new BigNumber(e);
