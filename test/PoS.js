@@ -98,21 +98,43 @@ contract("PoS", async (accounts) => {
         });
     });
 
-    it("holder can claim tokens after interval passed", async () => {
-        await moveAfterInterval();
+    // it("holder can claim tokens after interval passed", async () => {
+    //     await moveAfterInterval();
+    //
+    //     const beforeBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+    //
+    //     await Promise.all(tokenHolders
+    //         .map(claimTokens)
+    //         .map(p => p.should.be.fulfilled));
+    //
+    //     const afterBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+    //
+    //     afterBalances.forEach((afterBalance, i) => {
+    //         const beforeBalance = beforeBalances[i];
+    //
+    //         afterBalance.should.be.bignumber.equal(beforeBalance.mul(posRatio));
+    //     });
+    // });
 
-        const beforeBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+    it("holder can claim tokens after 2 interval passed", async () => {
+        let block = web3.eth.blockNumber - posInterval;
+        await moveAfterInterval(); // 10%
+        await moveAfterInterval(); // 21%
+        // await moveAfterInterval(); // 33%
 
-        await Promise.all(tokenHolders
+        let currentPosRate = await pos.getClaimRate(block); // 21%
+
+        let beforeBalances = await Promise.all(accounts.map(getTokenBalance));
+
+        await Promise.all(accounts
             .map(claimTokens)
-            .map(p => p.should.be.fulfilled));
+            .map(tx => tx.should.be.fulfilled)); // 21%
 
-        const afterBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+        let afterBalances = await Promise.all(accounts.map(getTokenBalance));
 
         afterBalances.forEach((afterBalance, i) => {
             const beforeBalance = beforeBalances[i];
-
-            afterBalance.should.be.bignumber.equal(beforeBalance.mul(posRatio));
+            afterBalance.should.be.bignumber.equal(beforeBalance.mul(currentPosRate.add(posCoeff)).div(posCoeff));
         });
     });
 });
