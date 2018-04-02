@@ -77,7 +77,7 @@ contract PoS is Ownable, TokenController {
     return (_blockNumber - initBlockNumber) >= posInterval;
   }
 
-  function getClaimRate(uint _fromBlock) internal returns (uint) {
+  function getClaimRate(uint _fromBlock) public view returns (uint) {
     if (_fromBlock == 0) {
       _fromBlock = initBlockNumber;
     }
