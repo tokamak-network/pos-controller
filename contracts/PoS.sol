@@ -121,11 +121,16 @@ contract PoS is Ownable, TokenController {
     }
 
     function doClaim(address _owner, Claim[] storage c) internal {
-        if ((c.length == 0 && claimable(block.number)) ||
-            (c.length > 0 && claimable(c[c.length - 1].fromBlock))) {
-            Claim storage newClaim = c[c.length++];
+        uint claimRate;
 
-            uint claimRate = getClaimRate(c[c.length - 1].fromBlock);
+        if (c.length == 0 && claimable(block.number)) {
+            claimRate = getClaimRate(0);
+        } else if (c.length > 0 && claimable(c[c.length - 1].fromBlock)) {
+            claimRate = getClaimRate(c[c.length - 1].fromBlock);
+        }
+
+        if (claimRate > 0) {
+            Claim storage newClaim = c[c.length++];
 
             // TODO: reduce variables into few statements
             uint balance = token.balanceOf(_owner);
