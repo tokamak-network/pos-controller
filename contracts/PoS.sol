@@ -1,4 +1,4 @@
-pragma solidity^0.4.18;
+pragma solidity ^0.4.18;
 
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/ownership/Ownable.sol";
@@ -62,17 +62,24 @@ contract PoS is Ownable, TokenController {
         doClaim(_owner, claims[_owner]);
     }
 
-    function getClaimRate(uint _fromBlock) public view returns (uint) {
-        uint targetBlock;
+    function getClaimRate(uint _fromBlock) internal view returns (uint) {
+        // interval block number when token holder get interests.
+        // if holder didn't claim before, `initBlockNumber`
+        // otherwise, n-th interval block (`initBlockNumber` + k * `posInterval`)
+        uint lastIntervalBlock;
 
-        if (_fromBlock == 0) {
-            targetBlock = initBlockNumber;
-        } else {
-            targetBlock = _fromBlock;
+        if (_fromBlock == 0) { // first claim
+            lastIntervalBlock = initBlockNumber;
+        } else { // second or further claim
+            // TODO:
+            uint offset = _fromBlock.sub(initBlockNumber) % posInterval;
+            lastIntervalBlock = _fromBlock.sub(offset);
         }
 
-        uint pow = block.number.sub(targetBlock) / posInterval;
-
+        // # of cumulative claims
+        uint pow = block.number.sub(lastIntervalBlock) / posInterval;
+        
+        // assume 1 claim is given to reduce loop iteration
         uint rate = posRate;
 
         // if claim rate is 10%,
