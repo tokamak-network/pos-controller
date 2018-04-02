@@ -120,7 +120,7 @@ contract("PoS", async (accounts) => {
   //     let block = web3.eth.blockNumber - posInterval;
   //     await moveAfterInterval(); // 10%
   //     await moveAfterInterval(); // 21%
-  //     // await moveAfterInterval(); // 33%
+  //     // await moveAfterInterval(); // 33.1%
   //
   //     let currentPosRate = await pos.getClaimRate(block); // 21%
   //
