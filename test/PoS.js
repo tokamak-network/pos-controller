@@ -116,25 +116,48 @@ contract("PoS", async (accounts) => {
     //     });
     // });
 
-    it("holder can claim tokens after 2 interval passed", async () => {
-        let block = web3.eth.blockNumber - posInterval;
+    // it("holder can claim tokens after 2 interval passed", async () => {
+    //     let block = web3.eth.blockNumber - posInterval;
+    //     await moveAfterInterval(); // 10%
+    //     await moveAfterInterval(); // 21%
+    //     // await moveAfterInterval(); // 33%
+    //
+    //     let currentPosRate = await pos.getClaimRate(block); // 21%
+    //
+    //     let beforeBalances = await Promise.all(accounts.map(getTokenBalance));
+    //
+    //     await Promise.all(accounts
+    //         .map(claimTokens)
+    //         .map(tx => tx.should.be.fulfilled)); // 21%
+    //
+    //     let afterBalances = await Promise.all(accounts.map(getTokenBalance));
+    //
+    //     afterBalances.forEach((afterBalance, i) => {
+    //         const beforeBalance = beforeBalances[i];
+    //         afterBalance.should.be.bignumber.equal(beforeBalance.mul(currentPosRate.add(posCoeff)).div(posCoeff));
+    //     });
+    // });
+
+    it("should call claim method when onTransfer method called", async () => {
+        let account0BalanceBefore = await getTokenBalance(accounts[0]);
+        let account1BalanceBefore = await getTokenBalance(accounts[1]);
+
+        let account2BalanceBefore = await getTokenBalance(accounts[2]);
+        let account3BalanceBefore = await getTokenBalance(accounts[3]);
+
         await moveAfterInterval(); // 10%
-        await moveAfterInterval(); // 21%
-        // await moveAfterInterval(); // 33%
 
-        let currentPosRate = await pos.getClaimRate(block); // 21%
+        await pos.onTransfer(accounts[0], accounts[1], 100);
 
-        let beforeBalances = await Promise.all(accounts.map(getTokenBalance));
+        let account0BalanceAfter = await getTokenBalance(accounts[0]);
+        let account1BalanceAfter = await getTokenBalance(accounts[1]);
+        let account2BalanceAfter = await getTokenBalance(accounts[2]);
+        let account3BalanceAfter = await getTokenBalance(accounts[3]);
 
-        await Promise.all(accounts
-            .map(claimTokens)
-            .map(tx => tx.should.be.fulfilled)); // 21%
+        account0BalanceAfter.should.be.bignumber.equal(account0BalanceBefore.mul((posRate + posCoeff) / posCoeff));
+        account1BalanceAfter.should.be.bignumber.equal(account1BalanceBefore.mul((posRate + posCoeff) / posCoeff));
 
-        let afterBalances = await Promise.all(accounts.map(getTokenBalance));
-
-        afterBalances.forEach((afterBalance, i) => {
-            const beforeBalance = beforeBalances[i];
-            afterBalance.should.be.bignumber.equal(beforeBalance.mul(currentPosRate.add(posCoeff)).div(posCoeff));
-        });
+        account2BalanceAfter.should.be.bignumber.equal(account2BalanceBefore);
+        account3BalanceAfter.should.be.bignumber.equal(account3BalanceBefore);
     });
 });
