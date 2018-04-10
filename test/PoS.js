@@ -44,10 +44,9 @@ contract("PoS", async (holders) => {
   // helper function
   const moveAfterInterval = async () => {
     const currentBlockNumber = web3.eth.blockNumber;
-    const diff = posInterval - (currentBlockNumber - posInitBlock) % posInterval;
-    const targetBlockNumber = currentBlockNumber + diff + 5; // 5 more blocks
+    const targetBlockNumber = Number(currentBlockNumber) + Number(posInterval); // 5 more blocks
 
-    console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ posInitBlock }, diff ${ diff }`);
+    console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ posInitBlock }`);
 
     await advanceToBlock(targetBlockNumber);
   };
@@ -164,7 +163,6 @@ contract("PoS", async (holders) => {
     afterBalance.should.be.bignumber.equal(expectedBalance);
   });
 
-  // TODO: fix test or contract
   it("holders can claim tokens after 2 intervals passed", async () => {
     await claimAllHolderTokens();
     await moveAfterInterval();
@@ -187,7 +185,6 @@ contract("PoS", async (holders) => {
     });
   });
 
-  // TODO: fix test or contract
   it("holders can claim tokens after 3 interval passed", async () => {
     await claimAllHolderTokens();
     await moveAfterInterval(); // 10%
