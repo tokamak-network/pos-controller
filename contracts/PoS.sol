@@ -132,7 +132,8 @@ contract PoS is Ownable, TokenController {
         if (_fromBlock == 0) { // first claim
             pow = block.number.sub(initBlockNumber).div(posInterval);
         } else { // second or further claim
-            pow = block.number.sub(_fromBlock).div(posInterval);
+            uint offset = _fromBlock.sub(initBlockNumber) % posInterval;
+            pow = block.number.sub(_fromBlock).add(offset).div(posInterval);
         }
 
         if (pow == 0) return 1;
