@@ -213,8 +213,8 @@ contract("PoS", async (holders) => {
     await moveAfterInterval(); // 10%
     await moveAfterInterval(); // 21%
 
-    const holder0 = holders[ 0 ];
-    const holder1 = holders[ 1 ];
+    const holder0 = tokenHolders[ 0 ];
+    const holder1 = tokenHolders[ 1 ];
     const tokenAmountToTransfer = ether(0.001);
 
     const holder0BalanceBefore = await getTokenBalance(holder0);
