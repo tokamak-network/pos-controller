@@ -92,7 +92,7 @@ contract PoS is Ownable, TokenController {
 
     /* Internal */
     function doClaim(address _owner, Claim[] storage c) internal {
-        uint claimRate;
+        uint claimRate = 0;
 
         if (c.length == 0 && claimable(block.number)) {
             claimRate = getClaimRate(0);
