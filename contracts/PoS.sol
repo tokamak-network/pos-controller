@@ -80,6 +80,7 @@ contract PoS is Ownable, TokenController {
     function onTransfer(address _from, address _to, uint) public returns(bool) {
         claim(_from);
         claim(_to);
+        return true;
     }
 
     /// @notice Notifies the controller about an approval allowing the
