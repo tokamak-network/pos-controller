@@ -126,18 +126,15 @@ contract PoS is Ownable, TokenController {
         // interval block number when token holder get interests.
         // if holder didn't claim before, `initBlockNumber`
         // otherwise, n-th interval block (`initBlockNumber` + k * `posInterval`)
-        uint lastIntervalBlock;
+        uint pow;
 
         if (_fromBlock == 0) { // first claim
-            lastIntervalBlock = initBlockNumber;
+            pow = block.number.sub(initBlockNumber).div(posInterval);
         } else { // second or further claim
-            // TODO:
-            uint offset = _fromBlock.sub(initBlockNumber) % posInterval;
-            lastIntervalBlock = _fromBlock.sub(offset);
+            pow = block.number.sub(_fromBlock).div(posInterval);
         }
 
-        // # of cumulative claims
-        uint pow = block.number.sub(lastIntervalBlock) / posInterval;
+        if (pow == 0) return 1;
 
         // assume 1 claim is given to reduce loop iteration
         uint rate = posRate;
