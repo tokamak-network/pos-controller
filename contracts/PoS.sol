@@ -136,7 +136,7 @@ contract PoS is Ownable, TokenController {
             pow = block.number.sub(_fromBlock).add(offset).div(posInterval);
         }
 
-        if (pow == 0) return 1;
+        if (pow == 0) return 0;
 
         // assume 1 claim is given to reduce loop iteration
         uint rate = posRate;
