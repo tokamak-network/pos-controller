@@ -44,9 +44,10 @@ contract("PoS", async (holders) => {
   // helper function
   const moveAfterInterval = async () => {
     const currentBlockNumber = web3.eth.blockNumber;
-    const targetBlockNumber = Number(currentBlockNumber) + Number(posInterval); // 5 more blocks
+    const targetBlockNumber = Number(currentBlockNumber) + Number(posInterval);
+    const diff = posInterval - (currentBlockNumber - posInitBlock) % posInterval;
 
-    console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ posInitBlock }`);
+    console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ posInitBlock }, diff ${ diff }`);
 
     await advanceToBlock(targetBlockNumber);
   };
