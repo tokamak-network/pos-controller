@@ -208,7 +208,6 @@ contract("PoS", async (holders) => {
     });
   });
 
-  // TODO: fix test or contract
   it("should generate claimed token when transfer occured", async () => {
     await claimAllHolderTokens();
     await moveAfterInterval(); // 10%
