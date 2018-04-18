@@ -20,7 +20,7 @@ const should = require("chai")
   .use(require("chai-bignumber")(BigNumber))
   .should();
 
-const Token = artifacts.require("./MiniMeToken.sol");
+const Token = artifacts.require("./PoSToken.sol");
 const PoS = artifacts.require("./PoS.sol");
 
 contract("PoS", async (holders) => {
@@ -44,8 +44,8 @@ contract("PoS", async (holders) => {
   // helper function
   const moveAfterInterval = async () => {
     const currentBlockNumber = web3.eth.blockNumber;
+    const targetBlockNumber = Number(currentBlockNumber) + Number(posInterval);
     const diff = posInterval - (currentBlockNumber - posInitBlock) % posInterval;
-    const targetBlockNumber = currentBlockNumber + diff + 5; // 5 more blocks
 
     console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ posInitBlock }, diff ${ diff }`);
 
@@ -60,17 +60,13 @@ contract("PoS", async (holders) => {
   // setup
   before(async () => {
     token = await Token.new(
-      0,
-      0,
-      0,
-      "Test Minime Token",
+      "Test PoS Token",
+      "TPT",
       18,
-      "TMT",
-      true,
     );
 
     await Promise.all(tokenHolders.map(holder =>
-      token.generateTokens(holder, tokenAmount)
+      token.mint(holder, tokenAmount)
         .should.be.fulfilled));
 
     pos = await PoS.new(
@@ -83,7 +79,7 @@ contract("PoS", async (holders) => {
 
     posInitBlock = await pos.initBlockNumber();
 
-    await token.changeController(pos.address);
+    await token.transferOwnership(pos.address);
   });
 
   it("holders cannot claim tokens before interval passed", async () => {
@@ -164,7 +160,6 @@ contract("PoS", async (holders) => {
     afterBalance.should.be.bignumber.equal(expectedBalance);
   });
 
-  // TODO: fix test or contract
   it("holders can claim tokens after 2 intervals passed", async () => {
     await claimAllHolderTokens();
     await moveAfterInterval();
@@ -187,7 +182,6 @@ contract("PoS", async (holders) => {
     });
   });
 
-  // TODO: fix test or contract
   it("holders can claim tokens after 3 interval passed", async () => {
     await claimAllHolderTokens();
     await moveAfterInterval(); // 10%
@@ -210,14 +204,13 @@ contract("PoS", async (holders) => {
     });
   });
 
-  // TODO: fix test or contract
   it("should generate claimed token when transfer occured", async () => {
     await claimAllHolderTokens();
     await moveAfterInterval(); // 10%
     await moveAfterInterval(); // 21%
 
-    const holder0 = holders[ 0 ];
-    const holder1 = holders[ 1 ];
+    const holder0 = tokenHolders[ 0 ];
+    const holder1 = tokenHolders[ 1 ];
     const tokenAmountToTransfer = ether(0.001);
 
     const holder0BalanceBefore = await getTokenBalance(holder0);
@@ -239,7 +232,4 @@ contract("PoS", async (holders) => {
     holder1BalanceAfter.should.be.bignumber
       .equal(expectedHolder1Balance);
   });
-
-  // TODO: test when multiple claims or transfers is in a single block
-  // especially for one single holder
 });
