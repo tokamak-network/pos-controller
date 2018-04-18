@@ -20,7 +20,7 @@ const should = require("chai")
   .use(require("chai-bignumber")(BigNumber))
   .should();
 
-const Token = artifacts.require("./MiniMeToken.sol");
+const Token = artifacts.require("./PoSToken.sol");
 const PoS = artifacts.require("./PoS.sol");
 
 contract("PoS", async (holders) => {
@@ -60,17 +60,13 @@ contract("PoS", async (holders) => {
   // setup
   before(async () => {
     token = await Token.new(
-      0,
-      0,
-      0,
-      "Test Minime Token",
+      "Test PoS Token",
+      "TPT",
       18,
-      "TMT",
-      true,
     );
 
     await Promise.all(tokenHolders.map(holder =>
-      token.generateTokens(holder, tokenAmount)
+      token.mint(holder, tokenAmount)
         .should.be.fulfilled));
 
     pos = await PoS.new(
@@ -83,7 +79,7 @@ contract("PoS", async (holders) => {
 
     posInitBlock = await pos.initBlockNumber();
 
-    await token.changeController(pos.address);
+    await token.transferOwnership(pos.address);
   });
 
   it("holders cannot claim tokens before interval passed", async () => {
@@ -236,7 +232,4 @@ contract("PoS", async (holders) => {
     holder1BalanceAfter.should.be.bignumber
       .equal(expectedHolder1Balance);
   });
-
-  // TODO: test when multiple claims or transfers is in a single block
-  // especially for one single holder
 });
