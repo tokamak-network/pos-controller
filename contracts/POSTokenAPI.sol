@@ -28,7 +28,7 @@ contract POSTokenAPI is Ownable, ERC20, ERC165 {
 
     function approve(address _spender, uint256 _value) public returns (bool) {
         if (controller != address(0)) {
-            POSControllerI(controller).claim(_spender);
+            POSControllerI(controller).claim(msg.sender);
         }
 
         return super.approve(_spender, _value);
