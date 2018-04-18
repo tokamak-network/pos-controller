@@ -3,11 +3,11 @@ pragma solidity ^0.4.18;
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/ownership/Ownable.sol";
 import "./minime/TokenController.sol";
-import "./minime/MiniMeToken.sol";
+import "./PoSToken.sol";
 
 
 /// @title PoS
-/// @dev PoS contract is a minime token controller that generate token interests
+/// @dev PoS contract is a mintable token controller that mint token interests
 /// according to predefined PoS-like rule.
 contract PoS is Ownable, TokenController {
     using SafeMath for uint;
@@ -17,7 +17,7 @@ contract PoS is Ownable, TokenController {
         uint128 claimedValue;
     }
 
-    MiniMeToken public token;
+    PoSToken public token;
 
     // PoS parameters
     uint public posInterval;
@@ -30,7 +30,7 @@ contract PoS is Ownable, TokenController {
 
     /* Constructor */
     function PoS(
-        MiniMeToken _token,
+        PoSToken _token,
         uint _posInterval,
         uint _initBlockNumber,
         uint _posRate,
@@ -113,7 +113,7 @@ contract PoS is Ownable, TokenController {
             newClaim.claimedValue = uint128(claimedValue);
             newClaim.fromBlock = uint128(block.number);
 
-            token.generateTokens(_owner, newClaim.claimedValue);
+            token.mint(_owner, newClaim.claimedValue);
         }
     }
 
