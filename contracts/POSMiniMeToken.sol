@@ -1,10 +1,11 @@
 pragma solidity ^0.4.18;
 
+import "./zeppelin/token/ERC20/ERC20.sol";
 import "./minime/MiniMeToken.sol";
 import "./POSTokenAPI.sol";
 
 
-contract POSMiniMeToken is MiniMeToken, POSMiniMeTokenAPI {
+contract POSMiniMeToken is ERC20, MiniMeToken, POSMiniMeTokenAPI {
     function POSMiniMeToken(
         address _tokenFactory,
         address _parentToken,
