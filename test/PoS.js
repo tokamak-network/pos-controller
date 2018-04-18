@@ -20,21 +20,35 @@ const should = require("chai")
   .use(require("chai-bignumber")(BigNumber))
   .should();
 
-const Token = artifacts.require("./MiniMeToken.sol");
-const PoS = artifacts.require("./PoS.sol");
+const POSFactory = artifacts.require("./POSFactory.sol");
+const POSMintableToken = artifacts.require("./POSMintableToken.sol");
+const POSMiniMeToken = artifacts.require("./POSMiniMeToken.sol");
+const POSController = artifacts.require("./POSController.sol");
 
-contract("PoS", async (holders) => {
-  let token, pos;
+contract("POS", async (holders) => {
+  const minime = {
+    token: null,
+    controller: null,
+    posInitBlock: -1,
+  };
+
+  const mintable = {
+    token: null,
+    controller: null,
+    posInitBlock: -1,
+  };
+
+  const pairs = [ minime, mintable ];
+
+  let factory;
 
   // PoS parameters
-  const posInterval = new BigNumber(100);
+  const posInterval = new BigNumber(200);
   const posRate = new BigNumber(100);
   const posCoeff = new BigNumber(1000);
   const _1ClaimRate = new BigNumber(1.100);
   const _2ClaimRate = new BigNumber(1.210);
   const _3ClaimRate = new BigNumber(1.331);
-
-  let posInitBlock;
 
   // common parameters
   const numHolders = 5;
@@ -43,201 +57,248 @@ contract("PoS", async (holders) => {
 
   // helper function
   const moveAfterInterval = async () => {
+    const initBlock = Math.min(minime.posInitBlock, mintable.posInitBlock);
     const currentBlockNumber = web3.eth.blockNumber;
-    const diff = posInterval - (currentBlockNumber - posInitBlock) % posInterval;
+    const diff = posInterval - (currentBlockNumber - initBlock) % posInterval;
     const targetBlockNumber = currentBlockNumber + diff + 5; // 5 more blocks
 
-    console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ posInitBlock }, diff ${ diff }`);
+    console.log(`move from ${ web3.eth.blockNumber } to ${ targetBlockNumber } with posInitBlock ${ initBlock }, diff ${ diff }`);
 
     await advanceToBlock(targetBlockNumber);
   };
-  const getTokenBalance = holder => token.balanceOf(holder);
-  const claimTokens = holder => pos.claim(holder, { from: holder });
-  const claimAllHolderTokens = () => Promise.all(tokenHolders
-    .map(claimTokens)
+
+  const getTokenBalance = token => holder => token.balanceOf(holder);
+  const claimTokens = controller => holder => controller.claim(holder, { from: holder });
+  const claimAllHolderTokens = controller => Promise.all(tokenHolders
+    .map(claimTokens(controller))
     .map(p => p.should.be.fulfilled));
 
   // setup
   before(async () => {
-    token = await Token.new(
-      0,
+    console.log("creating factory");
+
+    factory = await POSFactory.new();
+
+    // TODO: get address of token and controller from tx event
+    // minime
+    const [ minimeTokenAddr, minimeControllerAddr ] = await factory.createMiniMeToken(
       0,
       0,
       "Test Minime Token",
       18,
       "TMT",
       true,
-    );
-
-    await Promise.all(tokenHolders.map(holder =>
-      token.generateTokens(holder, tokenAmount)
-        .should.be.fulfilled));
-
-    pos = await PoS.new(
-      token.address,
       posInterval,
       0,
       posRate,
       posCoeff,
     );
 
-    posInitBlock = await pos.initBlockNumber();
+    minime.token = POSMiniMeToken.at(minimeTokenAddr);
+    minime.controller = POSController.at(minimeTokenAddr);
+    minime.posInitBlock = await minime.controller.initBlockNumber();
 
-    await token.changeController(pos.address);
+    console.log("minime created");
+
+    // mintable
+    const [ mintableTokenAddr, mintableControllerAddr ] = await factory.createMintableToken(
+      posInterval,
+      0,
+      posRate,
+      posCoeff,
+    );
+
+    mintable.token = POSMiniMeToken.at(minimeTokenAddr);
+    mintable.controller = POSController.at(minimeControllerAddr);
+    mintable.posInitBlock = await mintable.controller.initBlockNumber();
+
+    console.log("mintable created");
+
+    await Promise.all(tokenHolders.map(holder =>
+      minime.token.generateTokens(holder, tokenAmount)
+        .should.be.fulfilled));
+
+    await Promise.all(tokenHolders.map(holder =>
+      mintable.token.generateTokens(holder, tokenAmount)
+        .should.be.fulfilled));
+
+    await minime.token.changeController(minime.controller.address)
+      .should.be.fulfilled;
+    await mintable.token.transferOwnership(minime.controller.address)
+      .should.be.fulfilled;
   });
 
   it("holders cannot claim tokens before interval passed", async () => {
-    const beforeBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+    for (const { token, controller } of pairs) {
+      const beforeBalances = await Promise.all(tokenHolders.map(getTokenBalance(token)));
 
-    // await Promise.all(tokenHolders
-    //   .map(claimTokens)
-    //   .map(p => p.should.be.fulfilled));
+      await claimAllHolderTokens(controller);
 
-    await claimAllHolderTokens();
+      const afterBalances = await Promise.all(tokenHolders.map(getTokenBalance(token)));
 
-    const afterBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+      beforeBalances.should.be.deep.equal(afterBalances);
 
-    beforeBalances.should.be.deep.equal(afterBalances);
+      afterBalances.forEach((afterBalance, i) => {
+        const beforeBalance = beforeBalances[ i ];
 
-    afterBalances.forEach((afterBalance, i) => {
-      const beforeBalance = beforeBalances[ i ];
-
-      afterBalance.should.be.bignumber.equal(beforeBalance);
-    });
+        afterBalance.should.be.bignumber.equal(beforeBalance);
+      });
+    }
   });
 
   it("a holder can claim tokens after interval passed", async () => {
     await moveAfterInterval();
 
-    const tokenHolder = tokenHolders[ 0 ];
-    const claimRate = _1ClaimRate;
+    for (const { token, controller } of pairs) {
+      const tokenHolder = tokenHolders[ 0 ];
+      const claimRate = _1ClaimRate;
 
-    const beforeBalance = await getTokenBalance(tokenHolder);
-    await claimTokens(tokenHolder);
-    const expectedBalance = beforeBalance.mul(claimRate);
+      const beforeBalance = await getTokenBalance(token)(tokenHolder);
+      await claimTokens(controller)(tokenHolder);
+      const expectedBalance = beforeBalance.mul(claimRate);
 
-    const afterBalance = await getTokenBalance(tokenHolder);
+      const afterBalance = await getTokenBalance(token)(tokenHolder);
 
-    afterBalance.should.be.bignumber.equal(expectedBalance);
+      afterBalance.should.be.bignumber.equal(expectedBalance);
+    }
   });
 
   it("a holder can claim tokens after one more interval passed", async () => {
     await moveAfterInterval();
 
-    const tokenHolder = tokenHolders[ 0 ];
-    const claimRate = _1ClaimRate;
+    for (const { token, controller } of pairs) {
+      const tokenHolder = tokenHolders[ 0 ];
+      const claimRate = _1ClaimRate;
 
-    const beforeBalance = await getTokenBalance(tokenHolder);
-    await claimTokens(tokenHolder);
-    const expectedBalance = beforeBalance.mul(claimRate);
+      const beforeBalance = await getTokenBalance(token)(tokenHolder);
+      await claimTokens(controller)(tokenHolder);
+      const expectedBalance = beforeBalance.mul(claimRate);
 
-    const afterBalance = await getTokenBalance(tokenHolder);
+      const afterBalance = await getTokenBalance(token)(tokenHolder);
 
-    afterBalance.should.be.bignumber.equal(expectedBalance);
+      afterBalance.should.be.bignumber.equal(expectedBalance);
+    }
   });
 
   it("a holder can claim tokens after 2 intervals passed", async () => {
-    const tokenHolder = tokenHolders[ 1 ];
-    const claimRate = _2ClaimRate;
+    for (const { token, controller } of pairs) {
+      const tokenHolder = tokenHolders[ 1 ];
+      const claimRate = _2ClaimRate;
 
-    const beforeBalance = await getTokenBalance(tokenHolder);
-    await claimTokens(tokenHolder);
-    const expectedBalance = beforeBalance.mul(claimRate);
+      const beforeBalance = await getTokenBalance(token)(tokenHolder);
+      await claimTokens(controller)(tokenHolder);
+      const expectedBalance = beforeBalance.mul(claimRate);
 
-    const afterBalance = await getTokenBalance(tokenHolder);
+      const afterBalance = await getTokenBalance(token)(tokenHolder);
 
-    afterBalance.should.be.bignumber.equal(expectedBalance);
+      afterBalance.should.be.bignumber.equal(expectedBalance);
+    }
   });
 
   it("a holder can claim tokens after 3 intervals passed", async () => {
     await moveAfterInterval();
 
-    const tokenHolder = tokenHolders[ 2 ];
-    const claimRate = _3ClaimRate;
+    for (const { token, controller } of pairs) {
+      const tokenHolder = tokenHolders[ 2 ];
+      const claimRate = _3ClaimRate;
 
-    const beforeBalance = await getTokenBalance(tokenHolder);
-    await claimTokens(tokenHolder);
-    const expectedBalance = beforeBalance.mul(claimRate);
+      const beforeBalance = await getTokenBalance(token)(tokenHolder);
+      await claimTokens(controller)(tokenHolder);
+      const expectedBalance = beforeBalance.mul(claimRate);
 
-    const afterBalance = await getTokenBalance(tokenHolder);
+      const afterBalance = await getTokenBalance(token)(tokenHolder);
 
-    afterBalance.should.be.bignumber.equal(expectedBalance);
+      afterBalance.should.be.bignumber.equal(expectedBalance);
+    }
   });
 
   // TODO: fix test or contract
   it("holders can claim tokens after 2 intervals passed", async () => {
-    await claimAllHolderTokens();
+    for (const { controller } of pairs) {
+      await claimAllHolderTokens(controller);
+    }
+
     await moveAfterInterval();
     await moveAfterInterval();
 
-    const beforeBalances = await Promise.all(tokenHolders.map(getTokenBalance));
-    const claimRate = _2ClaimRate;
+    for (const { token, controller } of pairs) {
+      const beforeBalances = await Promise.all(tokenHolders.map(getTokenBalance(token)));
+      const claimRate = _2ClaimRate;
 
-    await Promise.all(tokenHolders
-      .map(claimTokens)
-      .map(p => p.should.be.fulfilled));
+      await Promise.all(tokenHolders
+        .map(claimTokens(controller))
+        .map(p => p.should.be.fulfilled));
 
-    const afterBalances = await Promise.all(tokenHolders.map(getTokenBalance));
+      const afterBalances = await Promise.all(tokenHolders.map(getTokenBalance(token)));
 
-    afterBalances.forEach((afterBalance, i) => {
-      const beforeBalance = beforeBalances[ i ];
+      afterBalances.forEach((afterBalance, i) => {
+        const beforeBalance = beforeBalances[ i ];
 
-      afterBalance.should.be.bignumber
-        .equal(beforeBalance.mul(claimRate));
-    });
+        afterBalance.should.be.bignumber
+          .equal(beforeBalance.mul(claimRate));
+      });
+    }
   });
 
   // TODO: fix test or contract
   it("holders can claim tokens after 3 interval passed", async () => {
-    await claimAllHolderTokens();
+    for (const { controller } of pairs) {
+      await claimAllHolderTokens(controller);
+    }
     await moveAfterInterval(); // 10%
     await moveAfterInterval(); // 21%
     await moveAfterInterval(); // 33.1%
 
-    const beforeBalances = await Promise.all(holders.map(getTokenBalance));
-    const claimRate = _3ClaimRate;
+    for (const { token, controller } of pairs) {
+      const beforeBalances = await Promise.all(holders.map(getTokenBalance(token)));
+      const claimRate = _3ClaimRate;
 
-    await Promise.all(holders
-      .map(claimTokens)
-      .map(p => p.should.be.fulfilled));
+      await Promise.all(holders
+        .map(claimTokens(controller))
+        .map(p => p.should.be.fulfilled));
 
-    const afterBalances = await Promise.all(holders.map(getTokenBalance));
+      const afterBalances = await Promise.all(holders.map(getTokenBalance(token)));
 
-    afterBalances.forEach((afterBalance, i) => {
-      const beforeBalance = beforeBalances[ i ];
-      afterBalance.should.be.bignumber
-        .equal(beforeBalance.mul(claimRate));
-    });
+      afterBalances.forEach((afterBalance, i) => {
+        const beforeBalance = beforeBalances[ i ];
+        afterBalance.should.be.bignumber
+          .equal(beforeBalance.mul(claimRate));
+      });
+    }
   });
 
   // TODO: fix test or contract
   it("should generate claimed token when transfer occured", async () => {
-    await claimAllHolderTokens();
+    for (const { controller } of pairs) {
+      await claimAllHolderTokens(controller);
+    }
     await moveAfterInterval(); // 10%
     await moveAfterInterval(); // 21%
 
-    const holder0 = holders[ 0 ];
-    const holder1 = holders[ 1 ];
-    const tokenAmountToTransfer = ether(0.001);
+    for (const { token, controller } of pairs) {
+      const holder0 = holders[ 0 ];
+      const holder1 = holders[ 1 ];
+      const tokenAmountToTransfer = ether(0.001);
 
-    const holder0BalanceBefore = await getTokenBalance(holder0);
-    const holder1BalanceBefore = await getTokenBalance(holder1);
-    const claimRate = _2ClaimRate;
+      const holder0BalanceBefore = await getTokenBalance(token)(holder0);
+      const holder1BalanceBefore = await getTokenBalance(token)(holder1);
+      const claimRate = _2ClaimRate;
 
-    const expectedHolder0Balance = holder0BalanceBefore.mul(claimRate)
-      .sub(tokenAmountToTransfer);
-    const expectedHolder1Balance = holder1BalanceBefore.mul(claimRate)
-      .add(tokenAmountToTransfer);
+      const expectedHolder0Balance = holder0BalanceBefore.mul(claimRate)
+        .sub(tokenAmountToTransfer);
+      const expectedHolder1Balance = holder1BalanceBefore.mul(claimRate)
+        .add(tokenAmountToTransfer);
 
-    await token.transfer(holder1, tokenAmountToTransfer, { from: holder0 });
+      await token.transfer(holder1, tokenAmountToTransfer, { from: holder0 });
 
-    const holder0BalanceAfter = await getTokenBalance(holder0);
-    const holder1BalanceAfter = await getTokenBalance(holder1);
+      const holder0BalanceAfter = await getTokenBalance(token)(holder0);
+      const holder1BalanceAfter = await getTokenBalance(token)(holder1);
 
-    holder0BalanceAfter.should.be.bignumber
-      .equal(expectedHolder0Balance);
-    holder1BalanceAfter.should.be.bignumber
-      .equal(expectedHolder1Balance);
+      holder0BalanceAfter.should.be.bignumber
+        .equal(expectedHolder0Balance);
+      holder1BalanceAfter.should.be.bignumber
+        .equal(expectedHolder1Balance);
+    }
   });
 
   // TODO: test when multiple claims or transfers is in a single block
