@@ -2,5 +2,5 @@ pragma solidity ^0.4.18;
 
 
 interface POSControllerI {
-    function claim(address _owner) external;
+    function claimTokens(address _owner) public;
 }

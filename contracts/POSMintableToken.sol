@@ -5,5 +5,4 @@ import "./zeppelin/token/MintableToken.sol";
 import "./POSTokenAPI.sol";
 
 
-contract POSMintableToken is ERC20, MintableToken, POSMintableTokenAPI {
-}
+contract POSMintableToken is ERC20, MintableToken, POSMintableTokenAPI {}

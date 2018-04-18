@@ -8,30 +8,30 @@ import "./interfaces/ERC165.sol";
 
 /// @title POSTokenAPI
 /// @notice POSTokenAPI adds token apis
-contract POSTokenAPI is Ownable, ERC20, ERC165 {
+contract POSTokenAPI is ERC20, ERC165 {
     address public controller;
 
-    function setController(address _controller) external onlyOwner {
+    function setController(address _controller) external {
         require(_controller == address(0)); // one time initialization
         require(isContract(_controller));
         controller = _controller;
     }
 
-    function transfer(address _to, uint256 _value) public returns (bool) {
+    function transfer(address to, uint256 value) public returns (bool) {
         if (controller != address(0)) {
-            POSControllerI(controller).claim(msg.sender);
-            POSControllerI(controller).claim(_to);
+            POSControllerI(controller).claimTokens(msg.sender);
+            POSControllerI(controller).claimTokens(to);
         }
 
-        return super.transfer(_to, _value);
+        return super.transfer(to, value);
     }
 
-    function approve(address _spender, uint256 _value) public returns (bool) {
+    function approve(address _spender, uint256 value) public returns (bool) {
         if (controller != address(0)) {
-            POSControllerI(controller).claim(msg.sender);
+            POSControllerI(controller).claimTokens(msg.sender);
         }
 
-        return super.approve(_spender, _value);
+        return super.approve(_spender, value);
     }
 
     /// @dev Internal function to determine if an address is a contract
@@ -51,7 +51,7 @@ contract POSTokenAPI is Ownable, ERC20, ERC165 {
 /// @title POSMintableTokenAPI
 /// @notice POSMintableTokenAPI adds token apis for MintableToken
 contract POSMintableTokenAPI is POSTokenAPI {
-    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+    function supportsInterface(bytes4 interfaceID) public view returns (bool) {
         return interfaceID == bytes4(keccak256("mint(address,uint256)")); // TODO: use bytes4 literal
     }
 }
@@ -60,7 +60,7 @@ contract POSMintableTokenAPI is POSTokenAPI {
 /// @title POSMiniMeTokenAPI
 /// @notice POSMiniMeTokenAPI adds token apis for MiniMeToken
 contract POSMiniMeTokenAPI is POSTokenAPI {
-    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+    function supportsInterface(bytes4 interfaceID) public view returns (bool) {
         return interfaceID == bytes4(keccak256("generateTokens(address,uint256)")); // TODO: use bytes4 literal
     }
 }
