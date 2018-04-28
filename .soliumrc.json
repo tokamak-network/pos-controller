@@ -10,7 +10,10 @@
     ],
     "indentation": [
       "error",
-      4
+      2
+    ],
+    "security/no-inline-assembly": [
+      "off"
     ]
   }
 }
