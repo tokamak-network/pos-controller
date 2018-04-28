@@ -6,14 +6,13 @@ import "./zeppelin/token/MintableToken.sol";
 import "./minime/Controlled.sol";
 import "./minime/MiniMeToken.sol";
 import "./minime/TokenController.sol";
-import "./interfaces/ERC165.sol";
 import "./interfaces/POSTokenI.sol";
 
 
-/// @title POSTokenAPI
-/// @notice POSTokenAPI provides MiniMeToken's onTransfer, onApprove, proxyPayment
-///  functionality for MintableToken.
-contract POSTokenAPI is ERC20, Ownable {
+/// @title TokenControllerBridge
+/// @notice TokenControllerBridge mocks Giveth's `Controller` for
+///  Zeppelin's `Ownable` `ERC20` Token.
+contract TokenControllerBridge is ERC20, Ownable {
   function () public payable {
     require(isContract(owner));
     require(TokenController(owner).proxyPayment.value(msg.value)(msg.sender));
@@ -52,10 +51,9 @@ contract POSTokenAPI is ERC20, Ownable {
 
 
 /// @title POSMintableTokenAPI
-/// @notice POSMintableTokenAPI implements ERC165, POSTokenI.
-///  MintableToken should inherit POSMintableTokenAPI to be able to
+/// @notice MintableToken should inherit POSMintableTokenAPI to be able to
 ///  compatible with POSController.
-contract POSMintableTokenAPI is POSTokenI, POSTokenAPI {
+contract POSMintableTokenAPI is POSTokenI, TokenControllerBridge {
   function supportsInterface(bytes4 interfaceID) public view returns (bool) {
     return interfaceID == bytes4(keccak256("mint(address,uint256)")); // TODO: use bytes4 literal
   }
@@ -67,10 +65,9 @@ contract POSMintableTokenAPI is POSTokenI, POSTokenAPI {
 
 
 /// @title POSMiniMeTokenAPI
-/// @notice POSMiniMeTokenAPI implements ERC165, POSTokenI
-///  BalanceUpdatableMiniMeToken should inherit POSMintableTokenAPI to be able to
+/// @notice BalanceUpdatableMiniMeToken should inherit POSMintableTokenAPI to be able to
 ///  compatible with POSController.
-contract POSMiniMeTokenAPI is ERC165, POSTokenI, Controlled {
+contract POSMiniMeTokenAPI is POSTokenI, Controlled {
   function supportsInterface(bytes4 interfaceID) public view returns (bool) {
     return interfaceID == bytes4(keccak256("generateTokens(address,uint256)")); // TODO: use bytes4 literal
   }

@@ -7,14 +7,12 @@ import "./zeppelin/token/MintableToken.sol";
 import "./minime/TokenController.sol";
 import "./minime/MiniMeToken.sol";
 import "./interfaces/POSTokenI.sol";
-import "./interfaces/ERC165.sol";
 
 
 /// @title POSController
-/// @dev POSController is a controller that generate token interests.
-///  according to predefined POSController-like rule.
-///  For MiniMeToken, POSController should be MiniMeToken's controller.
-///  For MintableToken, POSController should be POSMintableTokenAPI's posController.
+/// @dev POSController is a token controller that generate token interests.
+///  according to parameters(rate, coeff, interval blocks).
+///  It should be controller of `MiniMeToken` or owner of `MintableToken`.
 contract POSController is Ownable, TokenController {
   using SafeMath for uint256;
 
@@ -128,9 +126,9 @@ contract POSController is Ownable, TokenController {
   }
 
   function generateTokens(address _to, uint256 _value) internal returns (bool) {
-    if (ERC165(token).supportsInterface(bytes4(keccak256("mint(address,uint256)")))) {
+    if (POSTokenI(token).supportsInterface(bytes4(keccak256("mint(address,uint256)")))) {
       return MintableToken(token).mint(_to, _value);
-    } else if (ERC165(token).supportsInterface(bytes4(keccak256("generateTokens(address,uint256)")))) {
+    } else if (POSTokenI(token).supportsInterface(bytes4(keccak256("generateTokens(address,uint256)")))) {
       return MiniMeToken(token).generateTokens(_to, _value);
     }
 

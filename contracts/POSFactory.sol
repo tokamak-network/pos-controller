@@ -6,7 +6,7 @@ import "./POSMintableToken.sol";
 
 
 /// @title POSFactory
-/// @notice POSFactory creates POSMiniMeToken or POSMiniMeToken
+/// @notice POSFactory creates POSMiniMeToken or POSMiniMeToken with POSController.
 contract POSFactory {
   event Deploy(address _token, address _controller);
 
