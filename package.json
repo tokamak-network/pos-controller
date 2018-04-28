@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "npm run lint:eslint && npm run lint:solium",
     "lint:eslint": "eslint ./test --fix ",
-    "lint:solium": "solium -f ./contracts/PoS.sol --fix ",
+    "lint:solium": "solium -f ./contracts/POS*.sol --fix ",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
