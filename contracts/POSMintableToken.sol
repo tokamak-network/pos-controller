@@ -5,4 +5,20 @@ import "./zeppelin/token/MintableToken.sol";
 import "./POSTokenAPI.sol";
 
 
-contract POSMintableToken is ERC20, MintableToken, POSMintableTokenAPI {}
+/// @dev POSMintableToken inherits POSMintableTokenAPI to provdie common
+///  interface for POSController.
+contract POSMintableToken is MintableToken, POSMintableTokenAPI {
+  string public name;
+  string public symbol;
+  uint8 public decimals;
+
+  function POSMintableToken(
+    string _name,
+    string _symbol,
+    uint8 _decimals
+  ) public {
+    name = _name;
+    symbol = _symbol;
+    decimals = _decimals;
+  }
+}
