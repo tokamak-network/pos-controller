@@ -3,9 +3,7 @@ pragma solidity ^0.4.18;
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/ownership/Ownable.sol";
 import "./zeppelin/token/ERC20/ERC20.sol";
-import "./zeppelin/token/MintableToken.sol";
 import "./minime/TokenController.sol";
-import "./minime/MiniMeToken.sol";
 import "./interfaces/POSTokenI.sol";
 
 
@@ -127,9 +125,9 @@ contract POSController is Ownable, TokenController {
 
   function generateTokens(address _to, uint256 _value) internal returns (bool) {
     if (POSTokenI(token).supportsInterface(bytes4(keccak256("mint(address,uint256)")))) {
-      return MintableToken(token).mint(_to, _value);
+      return MintableTokenI(token).mint(_to, _value);
     } else if (POSTokenI(token).supportsInterface(bytes4(keccak256("generateTokens(address,uint256)")))) {
-      return MiniMeToken(token).generateTokens(_to, _value);
+      return MiniMeTokenI(token).generateTokens(_to, _value);
     }
 
     return false;

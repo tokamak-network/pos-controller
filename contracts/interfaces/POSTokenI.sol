@@ -13,3 +13,11 @@ interface POSTokenI {
   /// @notice calls `Ownable.transferOwnership()` or `Controlled.changeController()`
   function transferOwnershipTo(address _to) public;
 }
+
+interface MintableTokenI {
+  function mint(address _to, uint256 _amount) public returns (bool);
+}
+
+interface MiniMeTokenI {
+  function generateTokens(address _to, uint256 _amount) public returns (bool);
+}
