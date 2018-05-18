@@ -81,7 +81,7 @@ contract POSController is Ownable, TokenController {
   /// @notice proxyPayment implements MiniMeToken Controller's proxyPayment
   function proxyPayment(address _owner) public payable returns(bool) {
     revert(); // reject ether transfer to token contract
-    return true;
+    return false;
   }
 
   /// @notice onTransfer implements MiniMeToken Controller's onTransfer
