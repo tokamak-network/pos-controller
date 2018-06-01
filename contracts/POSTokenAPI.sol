@@ -1,8 +1,8 @@
 pragma solidity ^0.4.18;
 
-import "./zeppelin/ownership/Ownable.sol";
-import "./zeppelin/token/ERC20/ERC20.sol";
-import "./zeppelin/token/MintableToken.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 import "./minime/Controlled.sol";
 import "./minime/MiniMeToken.sol";
 import "./minime/TokenController.sol";
