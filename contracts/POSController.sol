@@ -112,9 +112,14 @@ contract POSController is Ownable, TokenController {
     if (claimRate > 0) {
       Claim storage newClaim = c[c.length++];
 
-      // TODO: reduce variables into few statements
       uint256 balance = ERC20(token).balanceOf(_owner);
 
+      // Short cuircit if there is no token to claim
+      if (balance == 0) {
+        return;
+      }
+
+      // TODO: reduce variables into few statements
       uint256 targetBalance = balance.mul(posCoeff.add(claimRate)).div(posCoeff);
       uint256 claimedValue = targetBalance.sub(balance);
 
