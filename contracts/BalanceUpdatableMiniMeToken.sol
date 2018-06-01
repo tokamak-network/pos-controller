@@ -18,7 +18,7 @@ contract BalanceUpdatableMiniMeToken is MiniMeToken {
     require(parentSnapShotBlock < block.number);
     require((_to != 0) && (_to != address(this)));
 
-    var previousBalanceFrom = balanceOfAt(_from, block.number);
+    uint previousBalanceFrom = balanceOfAt(_from, block.number);
     require(previousBalanceFrom >= _amount);
 
     if (isContract(controller)) {
