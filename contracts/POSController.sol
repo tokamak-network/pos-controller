@@ -42,6 +42,10 @@ contract POSController is Ownable, TokenController {
   ) public {
     require(_token != address(0));
 
+    require(_posInterval != 0);
+    require(_posRate != 0);
+    require(_posCoeff != 0);
+
     token = _token;
     posInterval = _posInterval;
     posRate = _posRate;
