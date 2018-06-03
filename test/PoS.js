@@ -21,8 +21,8 @@ const should = require("chai")
   .should();
 
 const POSFactory = artifacts.require("./POSFactory.sol");
-const POSMintableToken = artifacts.require("./POSMintableToken.sol");
-const POSMiniMeToken = artifacts.require("./POSMiniMeToken.sol");
+const POSMintableToken = artifacts.require("./POSMintableTokenImpl.sol");
+const POSMiniMeToken = artifacts.require("./POSMiniMeTokenImpl.sol");
 const POSController = artifacts.require("./POSController.sol");
 
 contract("POS", async ([ owner, ...holders ]) => {

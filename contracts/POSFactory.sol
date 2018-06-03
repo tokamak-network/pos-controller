@@ -1,8 +1,8 @@
 pragma solidity ^0.4.18;
 
 import "./POSController.sol";
-import "./POSMiniMeToken.sol";
-import "./POSMintableToken.sol";
+import "./POSMiniMeTokenImpl.sol";
+import "./POSMintableTokenImpl.sol";
 
 
 /// @title POSFactory
@@ -22,7 +22,7 @@ contract POSFactory {
     uint256 _posRate,
     uint256 _posCoeff
   ) public returns (POSMiniMeToken token, POSController posController) {
-    token = new POSMiniMeToken(
+    token = new POSMiniMeTokenImpl(
       0x00,
       _parentToken,
       _parentSnapShotBlock,
@@ -55,7 +55,7 @@ contract POSFactory {
     uint256 _posRate,
     uint256 _posCoeff
   ) public returns (POSMintableToken token, POSController posController) {
-    token = new POSMintableToken(_tokenName, _tokenSymbol, _decimalUnits);
+    token = new POSMintableTokenImpl(_tokenName, _tokenSymbol, _decimalUnits);
 
     posController = new POSController(
       address(token),
