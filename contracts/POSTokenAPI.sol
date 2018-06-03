@@ -22,7 +22,7 @@ contract TokenControllerBridge is ERC20, Ownable {
   function transfer(address _to, uint256 _value) public returns (bool) {
     if (isContract(owner)) { // owner should be able to generate tokens
       require(balanceOf(msg.sender) >= _value);
-      TokenController(owner).onTransfer(msg.sender, _to, _value);
+      require(TokenController(owner).onTransfer(msg.sender, _to, _value));
     }
 
     return super.transfer(_to, _value);
@@ -31,7 +31,7 @@ contract TokenControllerBridge is ERC20, Ownable {
   /// @dev invoke onApprove function before actual transfer function is executed.
   function approve(address _spender, uint256 _value) public returns (bool) {
     if (isContract(owner)) {
-      TokenController(owner).onApprove(msg.sender, _spender, _value);
+      require(TokenController(owner).onApprove(msg.sender, _spender, _value));
     }
 
     return super.approve(_spender, _value);
