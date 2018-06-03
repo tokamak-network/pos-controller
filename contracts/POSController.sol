@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "./minime/TokenController.sol";
+import "minimetoken/contracts/TokenController.sol";
 import "./interfaces/POSTokenI.sol";
 
 

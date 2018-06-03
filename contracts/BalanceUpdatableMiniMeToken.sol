@@ -1,18 +1,17 @@
 pragma solidity ^0.4.18;
 
-import "./minime/MiniMeToken.sol";
+import "minimetoken/contracts/MiniMeToken.sol";
 
 /// @dev BalanceUpdatableMiniMeToken assumes token controller may update
 ///  token balance inside `onTransfer` function of token controller.
 contract BalanceUpdatableMiniMeToken is MiniMeToken {
 
   /// @dev Override doTransfer function. only modified parts are documented.
-  function doTransfer(address _from, address _to, uint _amount
-  ) internal {
+  function doTransfer(address _from, address _to, uint _amount) internal returns(bool) {
 
     if (_amount == 0) {
       Transfer(_from, _to, _amount);
-      return;
+      return true;
     }
 
     require(parentSnapShotBlock < block.number);
@@ -36,5 +35,7 @@ contract BalanceUpdatableMiniMeToken is MiniMeToken {
     updateValueAtNow(balances[_to], previousBalanceTo + _amount);
 
     Transfer(_from, _to, _amount);
+
+    return true;
   }
 }
