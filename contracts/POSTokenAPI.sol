@@ -18,11 +18,6 @@ contract TokenControllerBridge is ERC20, Ownable {
     require(TokenController(owner).proxyPayment.value(msg.value)(msg.sender));
   }
 
-  function () public payable {
-    require(isContract(controller));
-    require(TokenController(controller).proxyPayment.value(msg.value)(msg.sender));
-  }
-
   /// @dev invoke onTransfer function before actual transfer function is executed.
   function transfer(address _to, uint256 _value) public returns (bool) {
     if (isContract(owner)) { // owner should be able to generate tokens
@@ -34,13 +29,13 @@ contract TokenControllerBridge is ERC20, Ownable {
   }
 
   /// @dev invoke onTransfer function before actual transfer function is executed.
-  function transferFrom(address _from, address _to, uint256 _amount) public returns (bool) {
+  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
     if (isContract(owner)) { // owner should be able to generate tokens
       require(balanceOf(_from) >= _value);
       require(TokenController(owner).onTransfer(_from, _to, _value));
     }
 
-    return super.transferFrom(_to, _value);
+    return super.transferFrom(_from, _to, _value);
   }
 
   /// @dev invoke onApprove function before actual transfer function is executed.
